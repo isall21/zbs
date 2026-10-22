@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BriefcaseBusiness, Camera, Dna, Sparkles, UserRound } from "lucide-react";
+import { ArrowDown, BriefcaseBusiness, Camera, Dna, Sparkles, UserRound } from "lucide-react";
 import Image from "next/image";
 import sampleBackground from "./images/background.jpeg";
 import creatorAvatar from "./images/avatar/the beauty creator.jpeg";
@@ -245,6 +245,10 @@ function loadAvatar(profileKey) {
 async function drawCard(profileKey) {
   const profile = PROFILES[profileKey];
   const avatar = await loadAvatar(profileKey);
+  const poppinsFont =
+    getComputedStyle(document.body).getPropertyValue("--font-poppins").trim() ||
+    "Poppins";
+  await document.fonts.load(`400 30px ${poppinsFont}`);
   const width = 1080;
   const height = 1920;
   const canvas = document.createElement("canvas");
@@ -258,11 +262,11 @@ async function drawCard(profileKey) {
   context.fillRect(0, 0, width, height);
   context.textBaseline = "alphabetic";
 
-  const cardGradient = context.createLinearGradient(60, 125, 60, 1670);
+  const cardGradient = context.createLinearGradient(60, 260, 60, 1660);
   cardGradient.addColorStop(0, "#FCF8EF");
   cardGradient.addColorStop(1, "#F4EDDF");
   context.fillStyle = cardGradient;
-  roundRect(context, 60, 125, 960, 1545, 42);
+  roundRect(context, 60, 260, 960, 1400, 42);
   context.fill();
   context.strokeStyle = `${profile.color}66`;
   context.lineWidth = 3;
@@ -270,68 +274,88 @@ async function drawCard(profileKey) {
 
   context.textAlign = "center";
   context.fillStyle = profile.color;
-  context.font = "700 26px system-ui, sans-serif";
-  context.fillText("BEAUTY DNA CARD", width / 2, 205);
+  context.font = `700 26px ${poppinsFont}, sans-serif`;
+  context.fillText("BEAUTY DNA CARD", width / 2, 340);
 
-  const avatarArea = { x: 135, y: 235, width: 810, height: 590 };
-  context.fillStyle = "#F8F3E7";
-  context.fillRect(avatarArea.x, avatarArea.y, avatarArea.width, avatarArea.height);
+  const avatarArea = { x: 60, y: 370, width: 960, height: 590 };
   const avatarScale = Math.min(
     avatarArea.width / avatar.naturalWidth,
     avatarArea.height / avatar.naturalHeight,
   );
   const avatarWidth = avatar.naturalWidth * avatarScale;
   const avatarHeight = avatar.naturalHeight * avatarScale;
+  const avatarCanvas = document.createElement("canvas");
+  avatarCanvas.width = Math.ceil(avatarWidth);
+  avatarCanvas.height = Math.ceil(avatarHeight);
   const avatarX = avatarArea.x + (avatarArea.width - avatarWidth) / 2;
   const avatarY = avatarArea.y + (avatarArea.height - avatarHeight) / 2;
-  context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
+  const avatarContext = avatarCanvas.getContext("2d");
+  avatarContext.drawImage(avatar, 0, 0, avatarCanvas.width, avatarCanvas.height);
+  avatarContext.globalCompositeOperation = "destination-in";
+  const horizontalMask = avatarContext.createLinearGradient(0, 0, avatarCanvas.width, 0);
+  horizontalMask.addColorStop(0, "rgba(0, 0, 0, 0)");
+  horizontalMask.addColorStop(0.09, "rgba(0, 0, 0, 1)");
+  horizontalMask.addColorStop(0.91, "rgba(0, 0, 0, 1)");
+  horizontalMask.addColorStop(1, "rgba(0, 0, 0, 0)");
+  avatarContext.fillStyle = horizontalMask;
+  avatarContext.fillRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+  const verticalMask = avatarContext.createLinearGradient(0, 0, 0, avatarCanvas.height);
+  verticalMask.addColorStop(0, "rgba(0, 0, 0, 0)");
+  verticalMask.addColorStop(0.1, "rgba(0, 0, 0, 1)");
+  verticalMask.addColorStop(0.9, "rgba(0, 0, 0, 1)");
+  verticalMask.addColorStop(1, "rgba(0, 0, 0, 0)");
+  avatarContext.fillStyle = verticalMask;
+  avatarContext.fillRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+  context.drawImage(avatarCanvas, avatarX, avatarY, avatarWidth, avatarHeight);
 
   context.fillStyle = "#2A1233";
   context.textAlign = "center";
-  context.font = "700 60px system-ui, sans-serif";
-  let y = wrapText(context, profile.name, width / 2, 895, 850, 70);
+  context.font = `700 60px ${poppinsFont}, sans-serif`;
+  let y = wrapText(context, profile.name, width / 2, 1030, 850, 70);
   context.fillStyle = profile.color;
-  context.font = "italic 33px system-ui, sans-serif";
+  context.font = `italic 33px ${poppinsFont}, sans-serif`;
   y = wrapText(context, profile.tagline, width / 2, y + 6, 820, 42);
 
-  context.textAlign = "left";
-  const x = 130;
   const maxWidth = 820;
-  y += 12;
+  const x = 130;
+  context.textAlign = "left";
+  y += 8;
   context.fillStyle = profile.color;
-  context.font = "700 33px system-ui, sans-serif";
+  context.font = `700 33px ${poppinsFont}, sans-serif`;
   context.fillText("Kekuatanmu", x, y);
   y += 42;
   context.fillStyle = "#2A1233";
-  context.font = "30px system-ui, sans-serif";
+  context.font = `400 30px ${poppinsFont}, sans-serif`;
   profile.strengths.forEach((strength) => {
     y = wrapText(context, `•  ${strength}`, x, y, maxWidth, 38) + 2;
   });
   y += 10;
   context.fillStyle = profile.color;
-  context.font = "700 33px system-ui, sans-serif";
+  context.textAlign = "left";
+  context.font = `700 33px ${poppinsFont}, sans-serif`;
   context.fillText("Langkah berikutnya", x, y);
   y += 42;
   context.fillStyle = "#2A1233";
-  context.font = "30px system-ui, sans-serif";
+  context.textAlign = "left";
+  context.font = `400 30px ${poppinsFont}, sans-serif`;
   profile.next.forEach((step) => {
     y = wrapText(context, `•  ${step}`, x, y, maxWidth, 38) + 2;
   });
 
-  const footerY = Math.max(y + 72, 1480);
+  const footerY = y + 42;
   context.textAlign = "center";
   context.fillStyle = "#2A1233";
-  context.font = "700 25px system-ui, sans-serif";
+  context.font = `700 25px ${poppinsFont}, sans-serif`;
   context.fillText(CONFIG.eventName, width / 2, footerY);
   context.fillStyle = profile.color;
-  context.font = "600 25px system-ui, sans-serif";
+  context.font = `600 25px ${poppinsFont}, sans-serif`;
   context.fillText(
     `${CONFIG.tagHandles ? `${CONFIG.tagHandles}  ` : ""}${CONFIG.hashtag}`,
     width / 2,
     footerY + 42,
   );
   context.fillStyle = "#6B5575";
-  context.font = "22px system-ui, sans-serif";
+  context.font = `400 22px ${poppinsFont}, sans-serif`;
   context.fillText(
     "Refleksi minat awal, bukan tes psikologi.",
     width / 2,
@@ -349,10 +373,11 @@ export default function Home() {
   const [resultKey, setResultKey] = useState(null);
   const [resultImage, setResultImage] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const [showScrollCue, setShowScrollCue] = useState(false);
   const cardCanvasRef = useRef(null);
   const toastTimerRef = useRef(null);
   const questionHeadingRef = useRef(null);
-  const resultHeadingRef = useRef(null);
+  const resultSectionRef = useRef(null);
   const total = QUESTIONS.length;
   const currentQuestion = QUESTIONS[questionIndex];
 
@@ -360,7 +385,7 @@ export default function Home() {
     if (screen === "quiz") {
       questionHeadingRef.current?.focus({ preventScroll: true });
     } else if (screen === "result") {
-      resultHeadingRef.current?.focus({ preventScroll: true });
+      resultSectionRef.current?.focus({ preventScroll: true });
     }
     window.scrollTo(0, 0);
   }, [screen, questionIndex]);
@@ -371,6 +396,28 @@ export default function Home() {
     },
     [],
   );
+
+  useEffect(() => {
+    if (screen !== "result") {
+      setShowScrollCue(false);
+      return;
+    }
+    const updateScrollCue = () => {
+      const remaining =
+        document.documentElement.scrollHeight -
+        window.scrollY -
+        window.innerHeight;
+      setShowScrollCue(remaining > 48);
+    };
+    const frame = window.requestAnimationFrame(updateScrollCue);
+    window.addEventListener("scroll", updateScrollCue, { passive: true });
+    window.addEventListener("resize", updateScrollCue);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", updateScrollCue);
+      window.removeEventListener("resize", updateScrollCue);
+    };
+  }, [screen, resultImage]);
 
   function showToast(message) {
     window.clearTimeout(toastTimerRef.current);
@@ -391,7 +438,8 @@ export default function Home() {
       const canvas = await drawCard(winner);
       cardCanvasRef.current = canvas;
       setResultImage(canvas.toDataURL("image/png"));
-    } catch {
+    } catch (error) {
+      console.error("Failed to render Beauty DNA Card", error);
       cardCanvasRef.current = null;
       setResultImage("");
       showToast("Kartu gambar tidak dapat dibuat di browser ini.");
@@ -510,9 +558,6 @@ export default function Home() {
             Jawab 6 pertanyaan singkat dan dapatkan Beauty DNA Card yang bisa
             kamu simpan atau bagikan ke Instagram Story.
           </p>
-          <button className="btn primary" onClick={startQuiz} type="button">
-            Mulai kuis
-          </button>
           <p className="note">
             Hanya 1–2 menit. Hasil kuis adalah refleksi minat awal, bukan tes
             psikologi atau penentu kesuksesan seseorang.
@@ -564,6 +609,9 @@ export default function Home() {
                 <span>YOUR NEXT CHAPTER STARTS HERE</span>
               </div>
             </article>
+            <button className="btn primary" onClick={startQuiz} type="button">
+              Mulai kuis
+            </button>
           </div>
         </section>
       )}
@@ -633,11 +681,13 @@ export default function Home() {
       )}
 
       {screen === "result" && profile && (
-        <section className="screen" aria-labelledby="result-title">
-          <p className="event">Hasil kamu</p>
-          <h2 id="result-title" ref={resultHeadingRef} tabIndex={-1}>
-            {profile.emoji} {profile.name}
-          </h2>
+        <section
+          className="screen"
+          aria-label="Hasil kuis"
+          ref={resultSectionRef}
+          tabIndex={-1}
+        >
+          <p className="event result-label">Hasil kamu</p>
           {resultImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -683,6 +733,22 @@ export default function Home() {
           </button>
           <p className="note">Refleksi minat awal, bukan tes psikologi.</p>
         </section>
+      )}
+
+      {showScrollCue && (
+        <button
+          aria-label="Gulir untuk melihat deskripsi hasil"
+          className="scroll-cue"
+          onClick={() =>
+            window.scrollBy({
+              top: Math.round(window.innerHeight * 0.68),
+              behavior: "smooth",
+            })
+          }
+          type="button"
+        >
+          <ArrowDown aria-hidden="true" />
+        </button>
       )}
 
       <p className={`toast${toastMessage ? " show" : ""}`} role="status" aria-live="polite">
