@@ -1,4 +1,4 @@
-# Beautypreneur DNA
+# zbs: Beautypreneur DNA
 
 Aplikasi kuis interaktif untuk mengenali minat di bidang beauty dan bisnis. Dibangun dengan Next.js App Router dan React.
 
