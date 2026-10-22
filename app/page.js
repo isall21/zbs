@@ -456,16 +456,19 @@ export default function Home() {
   const progress = ((questionIndex + 1) / total) * 100;
 
   return (
-    <main className="app">
+    <main className={`app${screen === "start" ? " app-start" : ""}`}>
       {screen === "start" && (
-        <section className="screen" aria-labelledby="start-title">
+        <section className="screen screen-start" aria-labelledby="start-title">
           <p className="event">{CONFIG.eventName}</p>
           <h1 id="start-title">
             Discover Your <span className="dna">Beautypreneur DNA</span>
           </h1>
           <p className="lead">
-            Jawab 6 pertanyaan singkat dan dapatkan Beauty DNA Card yang bisa
-            kamu simpan atau bagikan ke Instagram Story.
+            Temukan minatmu di dunia beauty dan bisnis lewat kuis singkat.
+          </p>
+          <p className="start-meta">
+            <span>6 pertanyaan</span>
+            <span>1–2 menit</span>
           </p>
           <button className="btn primary" onClick={startQuiz} type="button">
             Mulai kuis
