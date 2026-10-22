@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, BriefcaseBusiness, Camera, Dna, Sparkles, UserRound } from "lucide-react";
+import {
+  ArrowDown,
+  BriefcaseBusiness,
+  Camera,
+  Dna,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import Image from "next/image";
 import sampleBackground from "./images/background.jpeg";
 import creatorAvatar from "./images/avatar/the beauty creator.jpeg";
@@ -242,19 +249,26 @@ function loadAvatar(profileKey) {
   });
 }
 
-async function drawCard(profileKey) {
+async function drawCard(profileKey, fullName) {
   const profile = PROFILES[profileKey];
   const avatar = await loadAvatar(profileKey);
   const poppinsFont =
     getComputedStyle(document.body).getPropertyValue("--font-poppins").trim() ||
     "Poppins";
-  await document.fonts.load(`400 30px ${poppinsFont}`);
+  if (document.fonts?.load) {
+    try {
+      await document.fonts.load(`400 30px "${poppinsFont}"`);
+    } catch {
+      // Canvas will use its sans-serif fallback if the web font is unavailable.
+    }
+  }
   const width = 1080;
   const height = 1920;
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas 2D is not supported");
   const gradient = context.createLinearGradient(0, 0, 0, height);
   gradient.addColorStop(0, profile.color);
   gradient.addColorStop(1, "#2A1233");
@@ -272,10 +286,23 @@ async function drawCard(profileKey) {
   context.lineWidth = 3;
   context.stroke();
 
-  context.textAlign = "center";
+  context.font = `700 22px ${poppinsFont}, sans-serif`;
+  const titleWidth = context.measureText("BEAUTY DNA CARD").width + 40;
+  const titleX = (width - titleWidth) / 2;
   context.fillStyle = profile.color;
-  context.font = `700 26px ${poppinsFont}, sans-serif`;
-  context.fillText("BEAUTY DNA CARD", width / 2, 340);
+  roundRect(context, titleX, 238, titleWidth, 46, 18);
+  context.fill();
+  context.textAlign = "center";
+  context.fillStyle = "#FFFFFF";
+  context.fillText("BEAUTY DNA CARD", width / 2, 267);
+  context.fillStyle = profile.color;
+  let nameFontSize = 44;
+  context.font = `700 ${nameFontSize}px ${poppinsFont}, sans-serif`;
+  while (context.measureText(fullName).width > 860 && nameFontSize > 26) {
+    nameFontSize -= 1;
+    context.font = `700 ${nameFontSize}px ${poppinsFont}, sans-serif`;
+  }
+  context.fillText(fullName, width / 2, 350);
 
   const avatarArea = { x: 60, y: 370, width: 960, height: 590 };
   const avatarScale = Math.min(
@@ -284,29 +311,56 @@ async function drawCard(profileKey) {
   );
   const avatarWidth = avatar.naturalWidth * avatarScale;
   const avatarHeight = avatar.naturalHeight * avatarScale;
-  const avatarCanvas = document.createElement("canvas");
-  avatarCanvas.width = Math.ceil(avatarWidth);
-  avatarCanvas.height = Math.ceil(avatarHeight);
   const avatarX = avatarArea.x + (avatarArea.width - avatarWidth) / 2;
   const avatarY = avatarArea.y + (avatarArea.height - avatarHeight) / 2;
-  const avatarContext = avatarCanvas.getContext("2d");
-  avatarContext.drawImage(avatar, 0, 0, avatarCanvas.width, avatarCanvas.height);
-  avatarContext.globalCompositeOperation = "destination-in";
-  const horizontalMask = avatarContext.createLinearGradient(0, 0, avatarCanvas.width, 0);
-  horizontalMask.addColorStop(0, "rgba(0, 0, 0, 0)");
-  horizontalMask.addColorStop(0.09, "rgba(0, 0, 0, 1)");
-  horizontalMask.addColorStop(0.91, "rgba(0, 0, 0, 1)");
-  horizontalMask.addColorStop(1, "rgba(0, 0, 0, 0)");
-  avatarContext.fillStyle = horizontalMask;
-  avatarContext.fillRect(0, 0, avatarCanvas.width, avatarCanvas.height);
-  const verticalMask = avatarContext.createLinearGradient(0, 0, 0, avatarCanvas.height);
-  verticalMask.addColorStop(0, "rgba(0, 0, 0, 0)");
-  verticalMask.addColorStop(0.1, "rgba(0, 0, 0, 1)");
-  verticalMask.addColorStop(0.9, "rgba(0, 0, 0, 1)");
-  verticalMask.addColorStop(1, "rgba(0, 0, 0, 0)");
-  avatarContext.fillStyle = verticalMask;
-  avatarContext.fillRect(0, 0, avatarCanvas.width, avatarCanvas.height);
-  context.drawImage(avatarCanvas, avatarX, avatarY, avatarWidth, avatarHeight);
+  try {
+    const avatarCanvas = document.createElement("canvas");
+    avatarCanvas.width = Math.ceil(avatarWidth);
+    avatarCanvas.height = Math.ceil(avatarHeight);
+    const avatarContext = avatarCanvas.getContext("2d");
+    if (!avatarContext) throw new Error("Avatar canvas is unavailable");
+    avatarContext.drawImage(
+      avatar,
+      0,
+      0,
+      avatarCanvas.width,
+      avatarCanvas.height,
+    );
+    avatarContext.globalCompositeOperation = "destination-in";
+    const horizontalMask = avatarContext.createLinearGradient(
+      0,
+      0,
+      avatarCanvas.width,
+      0,
+    );
+    horizontalMask.addColorStop(0, "rgba(0, 0, 0, 0)");
+    horizontalMask.addColorStop(0.09, "rgba(0, 0, 0, 1)");
+    horizontalMask.addColorStop(0.91, "rgba(0, 0, 0, 1)");
+    horizontalMask.addColorStop(1, "rgba(0, 0, 0, 0)");
+    avatarContext.fillStyle = horizontalMask;
+    avatarContext.fillRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+    const verticalMask = avatarContext.createLinearGradient(
+      0,
+      0,
+      0,
+      avatarCanvas.height,
+    );
+    verticalMask.addColorStop(0, "rgba(0, 0, 0, 0)");
+    verticalMask.addColorStop(0.1, "rgba(0, 0, 0, 1)");
+    verticalMask.addColorStop(0.9, "rgba(0, 0, 0, 1)");
+    verticalMask.addColorStop(1, "rgba(0, 0, 0, 0)");
+    avatarContext.fillStyle = verticalMask;
+    avatarContext.fillRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+    context.drawImage(
+      avatarCanvas,
+      avatarX,
+      avatarY,
+      avatarWidth,
+      avatarHeight,
+    );
+  } catch {
+    context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
+  }
 
   context.fillStyle = "#2A1233";
   context.textAlign = "center";
@@ -366,6 +420,8 @@ async function drawCard(profileKey) {
 
 export default function Home() {
   const [screen, setScreen] = useState("start");
+  const [nameInput, setNameInput] = useState("");
+  const [fullName, setFullName] = useState("");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState(() =>
     Array(QUESTIONS.length).fill(null),
@@ -378,6 +434,7 @@ export default function Home() {
   const toastTimerRef = useRef(null);
   const questionHeadingRef = useRef(null);
   const resultSectionRef = useRef(null);
+  const nameInputRef = useRef(null);
   const total = QUESTIONS.length;
   const currentQuestion = QUESTIONS[questionIndex];
 
@@ -386,6 +443,8 @@ export default function Home() {
       questionHeadingRef.current?.focus({ preventScroll: true });
     } else if (screen === "result") {
       resultSectionRef.current?.focus({ preventScroll: true });
+    } else if (screen === "name") {
+      nameInputRef.current?.focus({ preventScroll: true });
     }
     window.scrollTo(0, 0);
   }, [screen, questionIndex]);
@@ -425,17 +484,29 @@ export default function Home() {
     toastTimerRef.current = window.setTimeout(() => setToastMessage(""), 3500);
   }
 
-  function startQuiz() {
+  function startQuiz(event) {
+    event.preventDefault();
+    const cleanName = nameInput.trim().replace(/\s+/g, " ");
+    if (!cleanName) {
+      showToast("Masukkan nama lengkap terlebih dahulu.");
+      nameInputRef.current?.focus();
+      return;
+    }
+    setFullName(cleanName);
     setQuestionIndex(0);
     setAnswers(Array(QUESTIONS.length).fill(null));
     setScreen("quiz");
+  }
+
+  function showNameForm() {
+    setScreen("name");
   }
 
   async function showResult(finalAnswers) {
     const { winner } = scoreResult(finalAnswers);
     setResultKey(winner);
     try {
-      const canvas = await drawCard(winner);
+      const canvas = await drawCard(winner, fullName);
       cardCanvasRef.current = canvas;
       setResultImage(canvas.toDataURL("image/png"));
     } catch (error) {
@@ -457,7 +528,12 @@ export default function Home() {
   }
 
   function goBack() {
-    if (questionIndex > 0) setQuestionIndex((index) => index - 1);
+    if (questionIndex > 0) {
+      setQuestionIndex((index) => index - 1);
+      return;
+    }
+    setNameInput(fullName);
+    setScreen("name");
   }
 
   function restartQuiz() {
@@ -477,7 +553,8 @@ export default function Home() {
         return;
       }
       canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error("Empty image blob"))),
+        (blob) =>
+          blob ? resolve(blob) : reject(new Error("Empty image blob")),
         "image/png",
       );
     });
@@ -539,7 +616,9 @@ export default function Home() {
           if (shareError?.name === "AbortError") return;
         }
       }
-      showToast("Tekan lama gambar kartu untuk menyimpan, lalu unggah ke Story.");
+      showToast(
+        "Tekan lama gambar kartu untuk menyimpan, lalu unggah ke Story.",
+      );
     }
   }
 
@@ -591,28 +670,71 @@ export default function Home() {
             />
             <article className="sample-card">
               <div className="sample-card-top">
-                <span className="sample-mark"><Dna aria-hidden="true" /></span>
+                <span className="sample-mark">
+                  <Dna aria-hidden="true" />
+                </span>
                 <span>BEAUTY DNA CARD</span>
                 <Sparkles aria-hidden="true" className="sample-sparkle" />
               </div>
               <div className="sample-identity">
-                <span className="sample-avatar"><UserRound aria-hidden="true" /></span>
+                <span className="sample-avatar">
+                  <UserRound aria-hidden="true" />
+                </span>
                 <div>
                   <strong>SALMA RAHMANI</strong>
                   <span>THE BEAUTY CREATOR</span>
                 </div>
               </div>
               <div className="sample-divider" />
-              <p>KREATIF <span>•</span> DETAIL <span>•</span> PENUH IDE</p>
+              <p>
+                KREATIF <span>•</span> DETAIL <span>•</span> PENUH IDE
+              </p>
               <div className="sample-card-bottom">
                 <span>BEAUTY DNA</span>
                 <span>YOUR NEXT CHAPTER STARTS HERE</span>
               </div>
             </article>
-            <button className="btn primary" onClick={startQuiz} type="button">
+            <button
+              className="btn primary"
+              onClick={showNameForm}
+              type="button"
+            >
               Mulai kuis
             </button>
           </div>
+        </section>
+      )}
+
+      {screen === "name" && (
+        <section className="screen name-screen" aria-labelledby="name-title">
+          <p className="event">{CONFIG.eventName}</p>
+          <h2 id="name-title">Nama untuk Beauty DNA Card</h2>
+          <form className="name-form" onSubmit={startQuiz}>
+            <label htmlFor="full-name">Nama lengkap</label>
+            <input
+              autoComplete="name"
+              id="full-name"
+              maxLength={60}
+              name="fullName"
+              onChange={(event) => setNameInput(event.target.value)}
+              placeholder="Tulis nama lengkapmu"
+              ref={nameInputRef}
+              required
+              value={nameInput}
+            />
+            <div className="name-actions">
+              <button
+                className="btn ghost"
+                onClick={() => setScreen("start")}
+                type="button"
+              >
+                Kembali
+              </button>
+              <button className="btn primary" type="submit">
+                Lanjut
+              </button>
+            </div>
+          </form>
         </section>
       )}
 
@@ -636,7 +758,11 @@ export default function Home() {
           <h2 id="question-title" ref={questionHeadingRef} tabIndex={-1}>
             {currentQuestion.question}
           </h2>
-          <div className="options" role="radiogroup" aria-labelledby="question-title">
+          <div
+            className="options"
+            role="radiogroup"
+            aria-labelledby="question-title"
+          >
             {currentQuestion.options.map((option) => (
               <label
                 className={`opt${answers[questionIndex] === option.profile ? " selected" : ""}`}
@@ -660,12 +786,7 @@ export default function Home() {
             ))}
           </div>
           <div className="nav">
-            <button
-              className="btn ghost"
-              onClick={goBack}
-              type="button"
-              disabled={questionIndex === 0}
-            >
+            <button className="btn ghost" onClick={goBack} type="button">
               Kembali
             </button>
             <button
@@ -693,7 +814,7 @@ export default function Home() {
             <img
               className="card-img"
               src={resultImage}
-              alt={`Beauty DNA Card: ${profile.name}. ${profile.tagline} Kekuatan: ${profile.strengths.join(", ")}.`}
+              alt={`Beauty DNA Card untuk ${fullName}: ${profile.name}. ${profile.tagline} Kekuatan: ${profile.strengths.join(", ")}.`}
             />
           ) : (
             <p className="note">Kartu gambar tidak tersedia di browser ini.</p>
@@ -751,7 +872,11 @@ export default function Home() {
         </button>
       )}
 
-      <p className={`toast${toastMessage ? " show" : ""}`} role="status" aria-live="polite">
+      <p
+        className={`toast${toastMessage ? " show" : ""}`}
+        role="status"
+        aria-live="polite"
+      >
         {toastMessage}
       </p>
     </main>
