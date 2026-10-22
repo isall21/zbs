@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { BriefcaseBusiness, Camera, Dna, Sparkles, UserRound } from "lucide-react";
 
 const CONFIG = {
   eventName: "Munas IMA UMKM & Tourism Award",
@@ -456,7 +457,7 @@ export default function Home() {
   const progress = ((questionIndex + 1) / total) * 100;
 
   return (
-    <main className={`app${screen === "start" ? " app-start" : ""}`}>
+    <main className="app">
       {screen === "start" && (
         <section className="screen screen-start" aria-labelledby="start-title">
           <p className="event">{CONFIG.eventName}</p>
@@ -464,11 +465,8 @@ export default function Home() {
             Discover Your <span className="dna">Beautypreneur DNA</span>
           </h1>
           <p className="lead">
-            Temukan minatmu di dunia beauty dan bisnis lewat kuis singkat.
-          </p>
-          <p className="start-meta">
-            <span>6 pertanyaan</span>
-            <span>1–2 menit</span>
+            Jawab 6 pertanyaan singkat dan dapatkan Beauty DNA Card yang bisa
+            kamu simpan atau bagikan ke Instagram Story.
           </p>
           <button className="btn primary" onClick={startQuiz} type="button">
             Mulai kuis
@@ -477,6 +475,45 @@ export default function Home() {
             Hanya 1–2 menit. Hasil kuis adalah refleksi minat awal, bukan tes
             psikologi atau penentu kesuksesan seseorang.
           </p>
+          <section className="benefits" aria-labelledby="benefits-title">
+            <h2 id="benefits-title">Apa yang akan kamu dapatkan:</h2>
+            <div className="benefit-grid">
+              <div className="benefit-item">
+                <Dna aria-hidden="true" />
+                <span>Wawasan DNA Personal</span>
+              </div>
+              <div className="benefit-item">
+                <Camera aria-hidden="true" />
+                <span>Kartu Estetik untuk Dibagikan</span>
+              </div>
+              <div className="benefit-item">
+                <BriefcaseBusiness aria-hidden="true" />
+                <span>Rekomendasi Awal Bisnis</span>
+              </div>
+            </div>
+          </section>
+          <div className="sample-stage" aria-label="Contoh Beauty DNA Card">
+            <article className="sample-card">
+              <div className="sample-card-top">
+                <span className="sample-mark"><Dna aria-hidden="true" /></span>
+                <span>BEAUTY DNA CARD</span>
+                <Sparkles aria-hidden="true" className="sample-sparkle" />
+              </div>
+              <div className="sample-identity">
+                <span className="sample-avatar"><UserRound aria-hidden="true" /></span>
+                <div>
+                  <strong>SARAH RAHMA</strong>
+                  <span>THE BEAUTY CREATOR</span>
+                </div>
+              </div>
+              <div className="sample-divider" />
+              <p>KREATIF <span>•</span> DETAIL <span>•</span> PENUH IDE</p>
+              <div className="sample-card-bottom">
+                <span>BEAUTY DNA</span>
+                <span>YOUR NEXT CHAPTER STARTS HERE</span>
+              </div>
+            </article>
+          </div>
         </section>
       )}
 
