@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BriefcaseBusiness, Camera, Dna, Sparkles, UserRound } from "lucide-react";
+import Image from "next/image";
+import sampleBackground from "./images/background.jpeg";
+import creatorAvatar from "./images/avatar/the beauty creator.jpeg";
+import beautypreneurAvatar from "./images/avatar/the beauty prener.jpeg";
+import connectorAvatar from "./images/avatar/the business connector.jpeg";
+import educatorAvatar from "./images/avatar/the educator.jpeg";
 
 const CONFIG = {
   eventName: "Munas IMA UMKM & Tourism Award",
@@ -11,6 +17,12 @@ const CONFIG = {
 };
 
 const ORDER = ["creator", "beautypreneur", "educator", "connector"];
+const AVATARS = {
+  creator: creatorAvatar,
+  beautypreneur: beautypreneurAvatar,
+  educator: educatorAvatar,
+  connector: connectorAvatar,
+};
 
 const PROFILES = {
   creator: {
@@ -221,8 +233,18 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
   return y + lineHeight;
 }
 
-function drawCard(profileKey) {
+function loadAvatar(profileKey) {
+  return new Promise((resolve, reject) => {
+    const image = new window.Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Avatar could not be loaded"));
+    image.src = AVATARS[profileKey].src;
+  });
+}
+
+async function drawCard(profileKey) {
   const profile = PROFILES[profileKey];
+  const avatar = await loadAvatar(profileKey);
   const width = 1080;
   const height = 1920;
   const canvas = document.createElement("canvas");
@@ -236,64 +258,84 @@ function drawCard(profileKey) {
   context.fillRect(0, 0, width, height);
   context.textBaseline = "alphabetic";
 
-  context.fillStyle = "#fff";
-  context.textAlign = "center";
-  context.font = "600 34px system-ui, sans-serif";
-  context.fillText("BEAUTY DNA CARD", width / 2, 120);
-
-  context.fillStyle = "#FFFFFF";
-  roundRect(context, 60, 170, 960, 1570, 48);
+  const cardGradient = context.createLinearGradient(60, 125, 60, 1670);
+  cardGradient.addColorStop(0, "#FCF8EF");
+  cardGradient.addColorStop(1, "#F4EDDF");
+  context.fillStyle = cardGradient;
+  roundRect(context, 60, 125, 960, 1545, 42);
   context.fill();
+  context.strokeStyle = `${profile.color}66`;
+  context.lineWidth = 3;
+  context.stroke();
+
+  context.textAlign = "center";
+  context.fillStyle = profile.color;
+  context.font = "700 26px system-ui, sans-serif";
+  context.fillText("BEAUTY DNA CARD", width / 2, 205);
+
+  const avatarArea = { x: 135, y: 235, width: 810, height: 590 };
+  context.fillStyle = "#F8F3E7";
+  context.fillRect(avatarArea.x, avatarArea.y, avatarArea.width, avatarArea.height);
+  const avatarScale = Math.min(
+    avatarArea.width / avatar.naturalWidth,
+    avatarArea.height / avatar.naturalHeight,
+  );
+  const avatarWidth = avatar.naturalWidth * avatarScale;
+  const avatarHeight = avatar.naturalHeight * avatarScale;
+  const avatarX = avatarArea.x + (avatarArea.width - avatarWidth) / 2;
+  const avatarY = avatarArea.y + (avatarArea.height - avatarHeight) / 2;
+  context.drawImage(avatar, avatarX, avatarY, avatarWidth, avatarHeight);
 
   context.fillStyle = "#2A1233";
-  context.font = "150px system-ui, 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji', sans-serif";
-  context.fillText(profile.emoji, width / 2, 390);
-  context.font = "bold 78px Georgia, serif";
-  context.fillText(profile.name, width / 2, 510);
+  context.textAlign = "center";
+  context.font = "700 60px system-ui, sans-serif";
+  let y = wrapText(context, profile.name, width / 2, 895, 850, 70);
   context.fillStyle = profile.color;
-  context.font = "italic 38px Georgia, serif";
-  let y = wrapText(context, profile.tagline, width / 2, 575, 800, 50);
+  context.font = "italic 33px system-ui, sans-serif";
+  y = wrapText(context, profile.tagline, width / 2, y + 6, 820, 42);
 
   context.textAlign = "left";
   const x = 130;
   const maxWidth = 820;
-  y += 30;
+  y += 12;
   context.fillStyle = profile.color;
-  context.font = "bold 40px Georgia, serif";
+  context.font = "700 33px system-ui, sans-serif";
   context.fillText("Kekuatanmu", x, y);
-  y += 54;
+  y += 42;
   context.fillStyle = "#2A1233";
-  context.font = "34px system-ui, sans-serif";
+  context.font = "30px system-ui, sans-serif";
   profile.strengths.forEach((strength) => {
-    y = wrapText(context, `•  ${strength}`, x, y, maxWidth, 46) + 10;
+    y = wrapText(context, `•  ${strength}`, x, y, maxWidth, 38) + 2;
   });
-  y += 36;
+  y += 10;
   context.fillStyle = profile.color;
-  context.font = "bold 40px Georgia, serif";
+  context.font = "700 33px system-ui, sans-serif";
   context.fillText("Langkah berikutnya", x, y);
-  y += 54;
+  y += 42;
   context.fillStyle = "#2A1233";
-  context.font = "34px system-ui, sans-serif";
+  context.font = "30px system-ui, sans-serif";
   profile.next.forEach((step) => {
-    y = wrapText(context, `•  ${step}`, x, y, maxWidth, 46) + 10;
+    y = wrapText(context, `•  ${step}`, x, y, maxWidth, 38) + 2;
   });
 
+  const footerY = Math.max(y + 72, 1480);
   context.textAlign = "center";
-  context.fillStyle = "#fff";
-  context.font = "600 32px system-ui, sans-serif";
-  context.fillText(CONFIG.eventName, width / 2, 1805);
-  context.font = "28px system-ui, sans-serif";
+  context.fillStyle = "#2A1233";
+  context.font = "700 25px system-ui, sans-serif";
+  context.fillText(CONFIG.eventName, width / 2, footerY);
+  context.fillStyle = profile.color;
+  context.font = "600 25px system-ui, sans-serif";
   context.fillText(
     `${CONFIG.tagHandles ? `${CONFIG.tagHandles}  ` : ""}${CONFIG.hashtag}`,
     width / 2,
-    1850,
+    footerY + 42,
   );
-  context.globalAlpha = 0.8;
-  context.font = "24px system-ui, sans-serif";
+  context.fillStyle = "#6B5575";
+  context.font = "22px system-ui, sans-serif";
   context.fillText(
     "Refleksi minat awal, bukan tes psikologi.",
     width / 2,
-    1890,
+    footerY + 82,
   );
   return canvas;
 }
@@ -342,11 +384,11 @@ export default function Home() {
     setScreen("quiz");
   }
 
-  function showResult(finalAnswers) {
+  async function showResult(finalAnswers) {
     const { winner } = scoreResult(finalAnswers);
     setResultKey(winner);
     try {
-      const canvas = drawCard(winner);
+      const canvas = await drawCard(winner);
       cardCanvasRef.current = canvas;
       setResultImage(canvas.toDataURL("image/png"));
     } catch {
@@ -493,6 +535,15 @@ export default function Home() {
             </div>
           </section>
           <div className="sample-stage" aria-label="Contoh Beauty DNA Card">
+            <Image
+              alt=""
+              aria-hidden="true"
+              className="sample-background"
+              fill
+              priority
+              sizes="(max-width: 480px) 100vw, 480px"
+              src={sampleBackground}
+            />
             <article className="sample-card">
               <div className="sample-card-top">
                 <span className="sample-mark"><Dna aria-hidden="true" /></span>
@@ -502,7 +553,7 @@ export default function Home() {
               <div className="sample-identity">
                 <span className="sample-avatar"><UserRound aria-hidden="true" /></span>
                 <div>
-                  <strong>SARAH RAHMA</strong>
+                  <strong>SALMA RAHMANI</strong>
                   <span>THE BEAUTY CREATOR</span>
                 </div>
               </div>

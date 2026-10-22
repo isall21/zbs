@@ -173,19 +173,43 @@ h3 {
 }
 
 .sample-stage {
+  position: relative;
+  isolation: isolate;
   display: grid;
   min-height: 220px;
   place-items: center;
   margin: 16px -20px -40px;
   padding: 16px 22px 30px;
   overflow: hidden;
-  background-color: #f1e7eb;
-  background-image:
-    radial-gradient(ellipse at 8% 90%, transparent 36px, rgb(194 48 126 / 12%) 37px, transparent 39px),
-    radial-gradient(ellipse at 94% 16%, transparent 48px, rgb(194 48 126 / 10%) 49px, transparent 51px);
+  background: var(--paper);
+}
+
+.sample-stage::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--paper) 0%,
+    rgb(247 241 249 / 72%) 15%,
+    rgb(247 241 249 / 10%) 40%,
+    rgb(247 241 249 / 10%) 68%,
+    var(--paper) 100%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.sample-background {
+  z-index: -1;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.82;
 }
 
 .sample-card {
+  position: relative;
+  z-index: 1;
   width: min(100%, 360px);
   min-height: 174px;
   padding: 14px 16px 12px;
